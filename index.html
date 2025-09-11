@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会钱计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 200px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            transition: all 0.3s;
+        }
+        
+        .sidebar ul {
+            list-style-type: none;
+        }
+        
+        .sidebar li {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .sidebar li:hover, .sidebar li.active {
+            background-color: #34495e;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .note {
+            background-color: #f8f9fa;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .calculation-area {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px;
+        }
+        
+        .calculation-card {
+            flex: 1 1 calc(50% - 20px);
+            margin: 0 10px;
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            width: 120px;
+            margin-bottom: 0;
+        }
+        
+        .input-group input, .input-group span {
+            flex: 1;
+            margin-right: 10px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-add {
+            background-color: #27ae60;
+        }
+        
+        .btn-add:hover {
+            background-color: #219653;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+            }
+            
+            .calculation-area {
+                flex-direction: column;
+            }
+            
+            .calculation-card {
+                flex: 1 1 100%;
+                margin-bottom: 20px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .input-group label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            
+            .input-group input, .input-group span {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <ul>
+            <li class="active" data-tab="hui-qian">会钱计算器</li>
+            <!-- 可以在这里添加更多的侧边栏选项 -->
+        </ul>
+    </div>
+    
+    <div class="main-content">
+        <div id="hui-qian" class="tab-content active">
+            <div class="card">
+                <h2>会钱基本信息</h2>
+                <div class="form-group">
+                    <label for="vestMoneyPerPeriod">每期投入金额(元)</label>
+                    <input type="number" id="vestMoneyPerPeriod" placeholder="请输入每期投入金额">
+                </div>
+                <div class="form-group">
+                    <label for="monthsPerPeriod">几个月为一期(比如3个月1期,则输入3)</label>
+                    <input type="number" id="monthsPerPeriod" placeholder="请输入几个月为一期">
+                </div>
+                <div class="form-group">
+                    <label for="participantNumber">参与人数(包括会首,所有人数)</label>
+                    <input type="number" id="participantNumber" placeholder="请输入参与人数">
+                </div>
+                <div class="note">
+                    注意,会首免息(或者象征性给点钱)拿走大家的钱的时候,就算第一期. 以下的计算方式也是按照次约定进行
+                </div>
+            </div>
+            
+            <div class="calculation-area">
+                <div class="calculation-card card">
+                    <h2>根据投标计算实际年化利率</h2>
+                    <div class="note">
+                        根据某一期的出标金额计算出实际上的借贷成本,以'年化利率'表示
+                    </div>
+                    
+                    <div id="interest-rate-calculations">
+                        <div class="input-group">
+                            <label>当前期数</label>
+                            <input type="number" class="current-period" placeholder="当前期数">
+                            <label>竞标金额</label>
+                            <input type="number" class="race-money" placeholder="竞标金额">
+                            <label>年化利率%</label>
+                            <span class="result-rate">0.00</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button class="calculate-rate-btn">计算</button>
+                        <button class="btn-add add-rate-row">添加</button>
+                    </div>
+                </div>
+                
+                <div class="calculation-card card">
+                    <h2>根据年化利率利率计算投标金额</h2>
+                    <div class="note">
+                        某一期,输入你期望以怎样的年化利率来竞得资金,从而计算出此时你应该的出竞标价
+                    </div>
+                    
+                    <div id="race-money-calculations">
+                        <div class="input-group">
+                            <label>当前期数</label>
+                            <input type="number" class="current-period" placeholder="当前期数">
+                            <label>竞标年化利率%</label>
+                            <input type="number" class="expected-rate" placeholder="竞标年化利率%">
+                            <label>竞标金额</label>
+                            <span class="result-money">0.00</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button class="calculate-money-btn">计算</button>
+                        <button class="btn-add add-money-row">添加</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class VestService {
+            constructor(vestMoneyPerPeriod, monthsPerPeriod, participantNumber) {
+                this.vestMoneyPerPeriod = vestMoneyPerPeriod; // 每期的投资金额
+                this.monthsPerPeriod = monthsPerPeriod; // 每期的月数
+                this.participantNumber = participantNumber; // 参与人数
+                this.totalMoneyInPool = 0; // 总资金池金额
+            }
+
+            calculateRaceMoney(currentPeriod, expectedAnnualInterestRate) {
+                const n = 12 / this.monthsPerPeriod; // 每年期数
+                const borrowedPeriods = this.participantNumber - currentPeriod; // 剩余期数
+                const r = 1 / (1 + (expectedAnnualInterestRate / 100) / n); // 折现因子
+                const c = this.VirtualBorrowedMoney(currentPeriod); // 分期本金
+
+                // 计算竞标金额
+                return c / (r * ((1 - Math.pow(r, borrowedPeriods)) / (1 - r))) - this.vestMoneyPerPeriod;
+            }
+
+            InterestRate(currentPeriod, raceMoney) {
+                const n = this.participantNumber - currentPeriod; // 剩余期数
+                const a = this.VirtualBorrowedMoney(currentPeriod) / (this.vestMoneyPerPeriod + raceMoney); // 分期本金
+                const tolerance = 0.00001; // 容差
+                let lower = 0;
+                let upper = 1;
+                let r = 0;
+
+                // 二分法计算年化利率
+                while ((upper - lower) > tolerance) {
+                    r = (lower + upper) / 2;
+                    const value = (r * (1 - Math.pow(r, n))) / (1 - r);
+
+                    if (value < a) {
+                        lower = r;
+                    } else {
+                        upper = r;
+                    }
+                }
+
+                return (1 / r - 1) * 100 * (12 / this.monthsPerPeriod); // 返回年化利率
+            }
+
+            actualBorrowedMoney(currentPeriod) {
+                let borrowMoney = this.VirtualBorrowedMoney(currentPeriod); // 初始借用金额
+                let borrowedPeriods = this.participantNumber - currentPeriod; // 剩余期数
+                const months = borrowedPeriods * this.monthsPerPeriod; // 总月数
+                let totalBorrowedMoney = 0;
+
+                // 累计借用金额
+                while (borrowedPeriods > 0) {
+                    totalBorrowedMoney += borrowMoney * this.monthsPerPeriod;
+                    borrowMoney -= this.vestMoneyPerPeriod;
+                    borrowedPeriods--;
+                }
+
+                // 返回平均借用金额
+                return totalBorrowedMoney / (this.monthsPerPeriod * months);
+            }
+
+            VirtualBorrowedMoney(currentPeriod) {
+                const vestedMoney = (currentPeriod - 1) * this.vestMoneyPerPeriod; // 已投入金额
+                // 返回实际借用资金
+                return (this.participantNumber - 1) * this.vestMoneyPerPeriod - vestedMoney;
+            }
+        }
+    </script>
+    
+    <script>
+        // 全局变量，用于存储VestService实例
+        let vestService = null;
+        
+        // 监听基本信息的输入变化
+        document.getElementById('vestMoneyPerPeriod').addEventListener('input', updateService);
+        document.getElementById('monthsPerPeriod').addEventListener('input', updateService);
+        document.getElementById('participantNumber').addEventListener('input', updateService);
+        
+        // 更新服务实例
+        function updateService() {
+            const vestMoneyPerPeriod = parseFloat(document.getElementById('vestMoneyPerPeriod').value) || 0;
+            const monthsPerPeriod = parseFloat(document.getElementById('monthsPerPeriod').value) || 0;
+            const participantNumber = parseFloat(document.getElementById('participantNumber').value) || 0;
+            
+            if (vestMoneyPerPeriod > 0 && monthsPerPeriod > 0 && participantNumber > 0) {
+                vestService = new VestService(vestMoneyPerPeriod, monthsPerPeriod, participantNumber);
+                console.log('VestService 已更新:', vestService);
+            } else {
+                vestService = null;
+            }
+        }
+        
+        // 添加年化利率计算行
+        document.querySelector('.add-rate-row').addEventListener('click', function() {
+            const template = `
+                <div class="input-group">
+                    <label>当前期数</label>
+                    <input type="number" class="current-period" placeholder="当前期数">
+                    <label>竞标金额</label>
+                    <input type="number" class="race-money" placeholder="竞标金额">
+                    <label>年化利率%</label>
+                    <span class="result-rate">0.00</span>
+                </div>
+            `;
+            document.getElementById('interest-rate-calculations').insertAdjacentHTML('beforeend', template);
+        });
+        
+        // 添加投标金额计算行
+        document.querySelector('.add-money-row').addEventListener('click', function() {
+            const template = `
+                <div class="input-group">
+                    <label>当前期数</label>
+                    <input type="number" class="current-period" placeholder="当前期数">
+                    <label>竞标年化利率%</label>
+                    <input type="number" class="expected-rate" placeholder="竞标年化利率%">
+                    <label>竞标金额</label>
+                    <span class="result-money">0.00</span>
+                </div>
+            `;
+            document.getElementById('race-money-calculations').insertAdjacentHTML('beforeend', template);
+        });
+        
+        // 计算年化利率
+        document.querySelector('.calculate-rate-btn').addEventListener('click', function() {
+            if (!vestService) {
+                alert('请先填写会钱基本信息');
+                return;
+            }
+            
+            const rows = document.querySelectorAll('#interest-rate-calculations .input-group');
+            rows.forEach(row => {
+                const currentPeriod = parseFloat(row.querySelector('.current-period').value) || 0;
+                const raceMoney = parseFloat(row.querySelector('.race-money').value) || 0;
+                
+                if (currentPeriod > 0 && raceMoney > 0) {
+                    try {
+                        const result = vestService.InterestRate(currentPeriod, raceMoney);
+                        row.querySelector('.result-rate').textContent = result.toFixed(2);
+                    } catch (e) {
+                        console.error('计算错误:', e);
+                        row.querySelector('.result-rate').textContent = 'Error';
+                    }
+                }
+            });
+        });
+        
+        // 计算投标金额
+        document.querySelector('.calculate-money-btn').addEventListener('click', function() {
+            if (!vestService) {
+                alert('请先填写会钱基本信息');
+                return;
+            }
+            
+            const rows = document.querySelectorAll('#race-money-calculations .input-group');
+            rows.forEach(row => {
+                const currentPeriod = parseFloat(row.querySelector('.current-period').value) || 0;
+                const expectedAnnualInterestRate = parseFloat(row.querySelector('.expected-rate').value) || 0;
+                
+                if (currentPeriod > 0 && expectedAnnualInterestRate > 0) {
+                    try {
+                        const result = vestService.calculateRaceMoney(currentPeriod, expectedAnnualInterestRate);
+                        row.querySelector('.result-money').textContent = result.toFixed(2);
+                    } catch (e) {
+                        console.error('计算错误:', e);
+                        row.querySelector('.result-money').textContent = 'Error';
+                    }
+                }
+            });
+        });
+        
+        // 侧边栏选项切换
+        document.querySelectorAll('.sidebar li').forEach(item => {
+            item.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                
+                // 激活当前选项卡
+                document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 显示对应的内容区域
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
