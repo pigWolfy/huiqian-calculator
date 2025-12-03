@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>会钱计算器</title>
     <script>(function(w,d,t,r,u){var f,n,i;w[u]=w[u]||[],f=function(){var o={ti:"97217960", enableAutoSpaTracking: true};o.q=w[u],w[u]=new UET(o),w[u].push("pageLoad")},n=d.createElement(t),n.src=r,n.async=1,n.onload=n.onreadystatechange=function(){var s=this.readyState;s&&s!=="loaded"&&s!=="complete"||(f(),n.onload=n.onreadystatechange=null)},i=d.getElementsByTagName(t)[0],i.parentNode.insertBefore(n,i)})(window,document,"script","//bat.bing.com/bat.js","uetq");</script>
+    <script>
+        function uet_report_conversion() {
+             window.uetq = window.uetq || [];
+             window.uetq.push('event', 'page_view', {});
+        }
+    </script>
     <style>
         * {
             margin: 0;
@@ -442,6 +448,9 @@
                 document.getElementById(tabId).classList.add('active');
             });
         });
+
+        // 调用 UET 报告转换函数
+        uet_report_conversion();
     </script>
 </body>
 </html>
